@@ -92,7 +92,8 @@ class NovaHeadset:
 
     def _send_command(self, command: int, feature: int, value: int, retries=3):
         data = self._create_msgdata(command, feature, value)
-        print(f"Sending command: {' '.join(f'{b:02x}' for b in data[:3])}")
+        if not (command == 0x06 and feature == 0x64):
+            print(f"Sending command: {' '.join(f'{b:02x}' for b in data[:3])}")
         
         for attempt in range(retries):
             try:
@@ -104,7 +105,8 @@ class NovaHeadset:
                     data_or_wLength=data,
                     timeout=1000
                 )
-                print(f"Sent {result} bytes")
+                if not (command == 0x06 and feature == 0x64):
+                    print(f"Sent {result} bytes")
                 return True
             except USBTimeoutError:
                 print(f"Timeout on attempt {attempt + 1}")
@@ -117,7 +119,6 @@ class NovaHeadset:
         return False
 
     def _query_chatmix(self):
-        # Just send the chatmix query command
         return self._send_command(0x06, 0x64, 0)
         
     def set_chatmix_controls(self, state: bool):
@@ -215,29 +216,24 @@ class NovaHeadset:
             while not self.CLOSE:
                 current_time = time.time()
                 
-                if current_time - last_query_time >= 0.1:
+                if current_time - last_query_time >= 0.001:
                     self._query_chatmix()
                     last_query_time = current_time
                 
                 try:
-                    data = self.ep_in.read(self.MSGLEN, timeout=100)
+                    data = self.ep_in.read(self.MSGLEN, timeout=1)
                     if len(data) >= 3:
                         cmd = data[0]
                         feature = data[1]
                         value = data[2]
                         
-                        # Only process ChatMix messages (feature 0x64)
                         if cmd == 0x45 and feature == 0x64:
-                            print(f"\nChatMix Movement:")
-                            print(f"Raw value: {value} (0x{value:02x})")
-                            
-                            # Direct mapping: 0x00 = full chat, 0x64 = full game
                             game_percent = int((value / 100.0) * 100)
                             chat_percent = 100 - game_percent
                             
                             if game_percent != last_value:
                                 last_value = game_percent
-                                print(f"ChatMix: {game_percent}% Game / {chat_percent}% Chat")
+                                print(f"\rChatMix: {game_percent}% Game / {chat_percent}% Chat", end="")
                                 
                                 try:
                                     if not use_pwcli:
@@ -251,19 +247,14 @@ class NovaHeadset:
                                 except:
                                     if not use_pwcli:
                                         use_pwcli = True
-                                        print("Switching to pw-cli for volume control...")
+                                        print("\nSwitching to pw-cli for volume control...")
                                     else:
-                                        print("Warning: Could not set volumes")
-                                
-                                bar_length = 40
-                                game_bars = int((game_percent / 100) * bar_length)
-                                chat_bars = bar_length - game_bars
-                                print(f"[{'G' * game_bars}{'C' * chat_bars}]")
+                                        print("\nWarning: Could not set volumes")
                         
                 except USBTimeoutError:
                     continue
                 except USBError as e:
-                    print(f"USB Error while reading: {e}")
+                    print(f"\nUSB Error while reading: {e}")
                     time.sleep(0.1)
         finally:
             self._remove_virtual_sinks()
