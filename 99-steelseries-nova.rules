@@ -1,0 +1,1 @@
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="1038", ATTRS{idProduct}=="2202", TAG+="uaccess", ENV{SYSTEMD_USER_WANTS}="nova-chatmix.service"
