@@ -1,6 +1,6 @@
 # Nova 7 Wireless Headset ChatMix Controller
 
-A Python script to enable ChatMix functionality for SteelSeries Arctis Nova headsets on Linux, allowing you to control game and chat audio balance using the physical ChatMix dial.
+A Python script to enable ChatMix functionality for SteelSeries Arctis Nova 7 Wireless on Linux, allowing you to control game and chat audio balance using the physical ChatMix dial.
 
 ## Features
 
@@ -25,21 +25,24 @@ A Python script to enable ChatMix functionality for SteelSeries Arctis Nova head
    pip install pyusb
 
 2. Create a udev rule to allow non-root access to the headset. Create a file `/etc/udev/rules.d/99-steelseries-nova.rules` with:
-   SUBSYSTEM=="usb", ATTRS{idVendor}=="1038", ATTRS{idProduct}=="2202", MODE="0666"
+   ```SUBSYSTEM=="usb", ATTRS{idVendor}=="1038", ATTRS{idProduct}=="2202", MODE="0666"```
 
 3. Reload udev rules:
-   sudo udevadm control --reload-rules
-   sudo udevadm trigger
+```
+sudo udevadm control --reload-rules
+   
+sudo udevadm trigger 
+```
 
 ## Usage
 
-1. Connect your SteelSeries Arctis Nova headset
+1. Connect your Arctis Nova 7 Wireless headset
 
 2. Run the script:
    python nova.py
 
 3. Configure your applications:
-   - Direct game audio to the "NovaGame" output
+   - Direct game and system audio to the "NovaGame" output
    - Direct chat applications (Discord, etc.) to the "NovaChat" output
 
 4. Use the ChatMix dial on your headset to adjust the balance between game and chat audio
@@ -49,7 +52,7 @@ A Python script to enable ChatMix functionality for SteelSeries Arctis Nova head
 The script:
 1. Detects and connects to the headset via USB
 2. Creates two virtual audio sinks using PipeWire:
-   - NovaGame: For game audio
+   - NovaGame: For game/system audio
    - NovaChat: For chat audio
 3. Monitors the ChatMix dial position
 4. Adjusts the volume of each sink based on the dial position:
@@ -62,21 +65,6 @@ The script:
 - If the virtual sinks aren't created, ensure PipeWire is running and pw-loopback is available
 - If volume control doesn't work with pactl, the script will automatically try pw-cli
 
-## Known Limitations
-
-- Must be run each time the headset is connected
-- Requires manual audio routing in applications
-- May need to be restarted if the headset goes to sleep or is disconnected
-- Only the first half of the dial is working, please help me finish this!
-
-## Contributing
-
-Feel free to submit issues, fork the repository, and create pull requests for any improvements.
-
 ## Credits
 
 - Thanks to https://github.com/Dymstro/nova-chatmix-linux for the initial implementation
-
-## Disclaimer
-
-This is an unofficial tool and is not affiliated with or endorsed by SteelSeries.
